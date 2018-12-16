@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string>
+
 #include "citation_graph.h"
 
 class Publication {
@@ -14,15 +16,31 @@ private:
 };
 
 int main() {
+    std::string key1 = "Goto Considered Harmful";
+    std::string key2 = "A";
 
-    CitationGraph<Publication> gen("Goto Considered Harmful");
-    CitationGraph<Publication> gen2(std::move(gen));\
-    CitationGraph<Publication> ge3("Goto Considered Harmful");
-    
+    CitationGraph<Publication> gen(key1);
+    CitationGraph<Publication> gen2(std::move(gen));
+    CitationGraph<Publication> gen3(key1);
+
+    assert(gen3.get_children(key1).size() == 0);
+    assert(gen3.get_parents(key1).size() == 0);
+
+    assert(gen3.exists(key1));
+    assert(!gen3.exists(key2));
+
+    assert(key1 == gen2[key1].get_id());
+    assert(key1 == gen3[key1].get_id());
     try {
-        throw PublicationAlreadyCreated();
-    }
-    catch (std::exception &e) {
+        gen3[key2]; //rzuca PublicationNotFound
+    } catch (std::exception &e) {
         std::cout << e.what() << '\n';
     }
+
+    try {
+        gen3.get_children(key2); //rzuca PublicationNotFound
+    } catch (std::exception &e) {
+        std::cout << e.what() << '\n';
+    }
+
 }
