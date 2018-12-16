@@ -1,3 +1,13 @@
+[JNP] Projekt 5: można stracić punkty za:
+- wyjątki nie dziedziczące po std::exception
+- trzymanie wielu map, a nie klasy Node
+- trzymanie internalsów publicznie
+- oznaczanie elementów jako usunięte, a nie usuwanie
+- zbyt duża złożoność operatora []
+- zbyt mała pojemność typów w pętli
+- brak noexcepta
+Rozwiązania będą testowane z valgrindem.
+
 Bajtek, po krachu jego cyfrowej waluty, został zmuszony wrócić do kariery
 akademickiej. Ponieważ nie jest zadowolony ze swojej nowej pensji, pisze obecnie
 wniosek o awans na stanowisko profesora. We wniosku musi podkreślić „wpływowość”

@@ -1,6 +1,14 @@
+#include "citation_graph.h"
 #include <iostream>
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+
+    try {
+        throw PublicationAlreadyCreated();
+    }
+    catch (std::exception &e) {
+        std::cout << e.what() << '\n';
+    }
+
     return 0;
 }
