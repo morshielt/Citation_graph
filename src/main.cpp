@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cassert>
 
 #include "citation_graph.h"
 
@@ -43,4 +44,11 @@ int main() {
         std::cout << e.what() << '\n';
     }
 
+    CitationGraph<Publication> gen4("root");
+    std::vector<std::string> parents;
+    parents.emplace_back("root");
+    gen4.create("halko", parents);
+    parents.emplace_back("halko");
+    gen4.create("halktt", parents);
+    assert(gen4.get_parents("halktt").size()==2);
 }
