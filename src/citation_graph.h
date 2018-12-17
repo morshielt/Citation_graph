@@ -103,19 +103,14 @@ public:
     }
 
     void create(id_type const &id, std::vector<id_type> const &parent_ids) {
-        if (nodes.find(id) != nodes.end())
-            throw PublicationAlreadyCreated();
-
-        if (parent_ids.empty())
-            throw PublicationNotFound();
+        if (nodes.find(id) != nodes.end()) { throw PublicationAlreadyCreated(); }
+        if (parent_ids.empty()) { throw PublicationNotFound(); }
 
         std::vector<std::shared_ptr<Node>> futureParents;
 
         for (const id_type &idType: parent_ids) {
-
             auto node = nodes.find(idType);
-            if (node == nodes.end())
-                throw PublicationNotFound();
+            if (node == nodes.end()) { throw PublicationNotFound(); }
 
             futureParents.push_back(node->second.lock());
         }
@@ -133,6 +128,14 @@ public:
 
         for (auto &guard : guards)
             guard.succeeded();
+    }
+
+    void remove(id_type const &id) {
+        auto node = nodes.find(id);
+
+        if (node == nodes.end()) { throw PublicationNotFound(); }
+        if (node->first == get_root_id()) { throw TriedToRemoveRoot(); }
+
     }
 
 private:
@@ -181,7 +184,7 @@ private:
         Publication publication;
         CitationGraph *graph;
         typename std::map<id_type, std::weak_ptr<Node>>::iterator
-            it; //iterator musi byc aktualny przed przenoszniem grafu
+            it; //iterator musi byc aktualny przed przenoszeniem grafu
         std::set<std::shared_ptr<Node>, std::owner_less<std::shared_ptr<Node>>> children;
         std::set<std::weak_ptr<Node>, std::owner_less<std::weak_ptr<Node>>> parents;
 

@@ -51,4 +51,10 @@ int main() {
     parents.emplace_back("halko");
     gen4.create("halktt", parents);
     assert(gen4.get_parents("halktt").size() == 2);
+    try {
+        gen4.remove("root");
+
+    } catch (std::exception &e) {
+        std::cout << e.what() << '\n';
+    }
 }
