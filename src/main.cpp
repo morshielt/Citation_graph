@@ -50,5 +50,5 @@ int main() {
     gen4.create("halko", parents);
     parents.emplace_back("halko");
     gen4.create("halktt", parents);
-    assert(gen4.get_parents("halktt").size()==2);
+    assert(gen4.get_parents("halktt").size() == 2);
 }
