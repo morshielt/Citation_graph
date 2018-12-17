@@ -136,6 +136,15 @@ public:
         if (node == nodes.end()) { throw PublicationNotFound(); }
         if (node->first == get_root_id()) { throw TriedToRemoveRoot(); }
 
+        auto node_ptr = node->second.lock();
+
+        for (auto &parent: node_ptr->parents) {
+            parent.lock()->children.erase(node_ptr->it->second.lock());
+        }
+
+        for (auto &child: node_ptr->children) {
+            child->parents.erase(node_ptr);
+        }
     }
 
 private:
@@ -187,7 +196,6 @@ private:
             it; //iterator musi byc aktualny przed przenoszeniem grafu
         std::set<std::shared_ptr<Node>, std::owner_less<std::shared_ptr<Node>>> children;
         std::set<std::weak_ptr<Node>, std::owner_less<std::weak_ptr<Node>>> parents;
-
     };
 
     class ScopeGuard {

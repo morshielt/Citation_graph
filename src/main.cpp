@@ -57,4 +57,15 @@ int main() {
     } catch (std::exception &e) {
         std::cout << e.what() << '\n';
     }
+
+    gen4.create("sierota", "halktt");
+    parents.emplace_back("halktt");
+    gen4.create("troche_sierota", parents);
+
+    gen4.remove("halktt");
+    assert(!gen4.exists("halktt")); //węzeł sam się usunął z mapy przy destrukcji
+    assert(!gen4.exists("sierota")); //samo się dziecko usunęło jak straciło wszystkich (1) rodziców
+    assert(gen4.exists("troche_sierota")); //węzeł stracił 1 z rodziców(nie wszystkich) i dalej istenieje
+    assert(gen4.get_parents("troche_sierota").size() == 2);
+
 }

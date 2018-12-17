@@ -15,11 +15,13 @@ class Publication {
 public:
     typedef typename std::string id_type;
     Publication(id_type const &_id) : id(_id) {
+        ctr++;
+        if (ctr % 3 == 0) throw PublicationException();
     }
 
     id_type get_id() const /*noexcept*/ {
         ctr++;
-        if (ctr % 3 == 0) throw new PublicationException();
+        if (ctr % 3 == 0) throw PublicationException();
         return id;
     }
 
@@ -38,7 +40,15 @@ int main() {
 
     CitationGraph<Publication> gen(key1);
     gen.create(key12, key1);
-    gen.create(key13, key1);
+
+    try {
+        gen.create(key13, key1); //wywala bo to 3 konstruktor
+    } catch (std::exception &e) {
+        std::cout << e.what() << '\n';
+    }
+    assert(gen.get_children(key1).size() == 1);
+    assert(gen.exists(key13));
+
     gen.create(key14, key1);
 
     try {
