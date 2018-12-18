@@ -10,6 +10,9 @@ citation_graph_example: zadanie/citation_graph_example.o src/citation_graph.h
 citation_graph_test: test/citation_graph_unit_tests.o src/citation_graph.h
 	$(CXX) $^ $(CXXFLAGS) -o $@
 
+test: test/test.cc src/citation_graph.h
+	$(CXX) $^ $(CXXFLAGS) -o $@
+
 zadanie/%: CXXFLAGS += -I src
 test/%: CXXFLAGS += -I src
 
