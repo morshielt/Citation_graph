@@ -2,7 +2,7 @@
 #include <string>
 #include <cassert>
 
-#include "citation_graph.h"
+#include "../src/citation_graph.h"
 
 class PublicationException : public std::exception {
 public:
@@ -47,7 +47,7 @@ int main() {
         std::cout << e.what() << '\n';
     }
     assert(gen.get_children(key1).size() == 1);
-    assert(gen.exists(key13));
+    assert(!gen.exists(key13));
 
     gen.create(key14, key1);
 

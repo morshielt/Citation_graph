@@ -43,8 +43,11 @@ int main() {
     } catch (std::exception &e) {
         std::cout << e.what() << '\n';
     }
+    
+   
 
     CitationGraph<Publication> gen4("root");
+    gen4 = gen3;
     std::vector<std::string> parents;
     parents.emplace_back("root");
     gen4.create("halko", parents);
