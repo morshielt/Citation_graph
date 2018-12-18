@@ -159,11 +159,10 @@ public:
             throw TriedToRemoveRoot();
         }
         
-        
         auto node_ptr = node->second.lock();
         
         for (auto &parent: node_ptr->parents) {
-            parent.lock()->children.erase(node_ptr->it->second.lock());
+            parent.lock()->children.erase(node_ptr);
         }
         
         for (auto &child: node_ptr->children) {

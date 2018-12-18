@@ -47,7 +47,7 @@ int main() {
    
 
     CitationGraph<Publication> gen4("root");
-    gen4 = gen3;
+    //gen4 = gen3; czy to powinno się wywalać?
     std::vector<std::string> parents;
     parents.emplace_back("root");
     gen4.create("halko", parents);
