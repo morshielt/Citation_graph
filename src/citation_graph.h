@@ -153,7 +153,7 @@ private:
         friend class CitationGraph;
     
     public:
-        Node(const id_type id, CitationGraph *graph) : publication(id), graph(graph) {}
+        Node(const id_type id, CitationGraph *graph) : publication(id), graph(graph) , it(graph->nodes.end()) {}
         
         void setIt(const typename std::map<id_type, std::weak_ptr<Node>>::iterator &it) {
             this->it = it;
@@ -184,8 +184,8 @@ private:
         }
         
         ~Node() {
-            if (it) {
-                graph->nodes.erase(*it);
+            if (it!=graph->nodes.end()) {
+                graph->nodes.erase(it);
             }
         }
     
@@ -193,7 +193,7 @@ private:
         
     private:
         CitationGraph *graph;
-        std::optional<typename std::map<id_type, std::weak_ptr<Node>>::iterator>
+        typename std::map<id_type, std::weak_ptr<Node>>::iterator
                 it; //iterator musi byc aktualny przed przenoszeniem grafu
         std::set<std::shared_ptr<Node>, std::owner_less<std::shared_ptr<Node>>> children;
         std::set<std::weak_ptr<Node>, std::owner_less<std::weak_ptr<Node>>> parents;
