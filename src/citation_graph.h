@@ -31,19 +31,87 @@ public:
 
 template<typename Publication>
 class CitationGraph {
-public:
+private:
     using id_type = typename Publication::id_type;
 
+    class Node {
+        friend class CitationGraph;
+
+    public:
+        Node(const id_type id, CitationGraph *graph) : publication(id), graph(graph), it(graph->nodes.end()) {}
+
+        void set_iterator(const typename std::map<id_type, std::weak_ptr<Node>>::iterator &it) {
+            this->it = it;
+        }
+
+        void set_graph(CitationGraph *graph) {
+            this->graph = graph;
+        }
+
+        id_type publication_id() const noexcept(noexcept(std::declval<Publication>().get_id())) {
+            return publication.get_id(); //can throw, doesn't modify graph
+        }
+
+        std::vector<id_type> children_ids() {
+            std::vector<id_type> children_ids;
+            for (auto &child : children) {
+                //can throw, basic guarantee, doesn't modify graph
+                children_ids.push_back(child->publication_id());
+            }
+            return children_ids;
+        }
+
+        std::vector<id_type> parents_ids() {
+            std::vector<id_type> parents_ids;
+            for (auto &parent : parents) {
+                //can throw, basic guarantee, doesn't modify graph
+                parents_ids.push_back(parent.lock()->publication_id()); //lock() noexcept
+            }
+            return parents_ids;
+        }
+
+        ~Node() {
+
+            if (it != graph->nodes.end()) {
+                auto ptr = it->second;
+                for (auto &child : children) {
+                    child->parents.erase(ptr); // doesn't throw
+                }
+                graph->nodes.erase(it); // doesn't throw
+            }
+        }
+
+        Publication publication;
+
+    private:
+        CitationGraph *graph;
+        typename std::map<id_type, std::weak_ptr<Node>>::iterator it;
+        std::set<std::shared_ptr<Node>, std::owner_less<std::shared_ptr<Node>>> children;
+        std::set<std::weak_ptr<Node>, std::owner_less<std::weak_ptr<Node>>> parents;
+    };
+
+    std::map<id_type, std::weak_ptr<Node>> nodes;
+    std::shared_ptr<Node> root;
+
+    std::shared_ptr<Node> get_node(const id_type &id) const {
+        auto node_it = nodes.find(id); // strong guarantee from stl
+        if (node_it == nodes.end()) {
+            throw PublicationNotFound();
+        }
+        return node_it->second.lock(); //lock() noexcept
+    }
+
+public:
     CitationGraph(id_type const &stem_id) {
-        root = std::make_shared<Node>(stem_id, this);
-        auto insRes = nodes.emplace(stem_id, root);
-        root->setIt(insRes.first);
+        root = std::make_shared<Node>(stem_id, this); // can throw, nothing needs to be done
+        auto insert_it = nodes.emplace(stem_id, root); // strong guarantee from stl
+        root->set_iterator(insert_it.first);
     }
 
     CitationGraph(CitationGraph<Publication> &&other) noexcept : nodes(std::move(other.nodes)),
                                                                  root(std::move(other.root)) {
         for (auto &node : nodes) {
-            node.second.lock()->setGraph(this);
+            node.second.lock()->set_graph(this); //lock() noexcept
         }
     }
 
@@ -57,18 +125,18 @@ public:
             root = std::move(other.root);
 
             for (auto &node : nodes) {
-                node.second.lock()->setGraph(this);
+                node.second.lock()->set_graph(this); //lock() noexcept
             }
         }
         return *this;
     }
 
     id_type get_root_id() const noexcept(noexcept(std::declval<Publication>().get_id())) {
-        return root->getId();
+        return root->publication_id();
     }
 
     bool exists(id_type const &id) const {
-        return (nodes.find(id) != nodes.end());
+        return (nodes.find(id) != nodes.end()); // strong guarantee from stl
     }
 
     std::vector<id_type> get_children(id_type const &id) const {
@@ -86,21 +154,25 @@ public:
         return node_ptr->publication;
     }
 
+    // ScopeGuard class guarantees reverting the changes in case of insert()
+    // throwing exception
     void add_citation(id_type const &child_id, id_type const &parent_id) {
         auto parent = get_node(parent_id);
         auto child = get_node(child_id);
 
-        auto guard = guarded_insert(parent->children, child);
-        child->parents.insert(parent);
-        guard.succeeded();
+        ScopeGuard guard = guarded_insert(parent->children, child);
+        child->parents.insert(parent); // if throws, ScopeGuard reverts changes
+        guard.succeeded(); //signal that ScopeGuard doesn't have to revert changes
     }
 
     void create(id_type const &id, id_type const &parent_id) {
         create(id, std::vector<id_type>{parent_id});
     }
 
+    // ScopeGuard class guarantees reverting the changes in case of insert()
+    // throwing exception
     void create(id_type const &id, std::vector<id_type> const &parent_ids) {
-        if (nodes.find(id) != nodes.end()) {
+        if (nodes.find(id) != nodes.end()) { // strong guarantee from stl
             throw PublicationAlreadyCreated();
         }
 
@@ -108,26 +180,26 @@ public:
             throw PublicationNotFound();
         }
 
-        std::shared_ptr<Node> newNode = std::make_shared<Node>(id, this);
+        std::shared_ptr<Node> new_node = std::make_shared<Node>(id, this); //can throw, hasn't modified graph yet
         std::vector<ScopeGuard> guards;
 
-        for (const id_type &idType: parent_ids) {
-            std::shared_ptr<Node> parent = get_node(idType);
-
-            guards.push_back(guarded_insert(parent->children, newNode));
-            guards.push_back(guarded_insert(newNode->parents, parent));
+        for (const id_type &parent_id: parent_ids) {
+            std::shared_ptr<Node> parent = get_node(parent_id);
+            guards.push_back(guarded_insert(parent->children, new_node));
+            guards.push_back(guarded_insert(new_node->parents, parent));
         }
 
-        auto insRes = nodes.emplace(id, newNode);
-        newNode->setIt(insRes.first);
+        auto result_iterator = nodes.emplace(id, new_node); // strong guarantee from stl
+        new_node->set_iterator(result_iterator.first);
 
         for (auto &guard : guards) {
-            guard.succeeded();
+            guard.succeeded();  //signal that ScopeGuard doesn't have to revert changes
         }
     }
 
+    //All shared pointers to node are removed and ~Node() is called.
     void remove(id_type const &id) {
-        auto node = nodes.find(id);
+        auto node = nodes.find(id); // strong guarantee from stl
 
         if (node == nodes.end()) {
             throw PublicationNotFound();
@@ -136,69 +208,14 @@ public:
             throw TriedToRemoveRoot();
         }
 
-        auto node_ptr = node->second.lock();
+        auto node_ptr = node->second.lock(); //lock() noexcept
 
         for (auto &parent: node_ptr->parents) {
-            parent.lock()->children.erase(node_ptr);
+            parent.lock()->children.erase(node_ptr); //lock() noexcept // erase(pointer) doesn't throw
         }
     }
 
-private:
-    class Node {
-        friend class CitationGraph;
-
-    public:
-        Node(const id_type id, CitationGraph *graph) : publication(id), graph(graph), it(graph->nodes.end()) {}
-
-        void setIt(const typename std::map<id_type, std::weak_ptr<Node>>::iterator &it) {
-            this->it = it;
-        }
-
-        void setGraph(CitationGraph *graph) {
-            this->graph = graph;
-        }
-
-        id_type getId() const noexcept(noexcept(std::declval<Publication>().get_id())) {
-            return publication.get_id();
-        }
-
-        std::vector<id_type> children_ids() {
-            std::vector<id_type> children_ids;
-            for (auto &child : children) {
-                children_ids.push_back(child->getId());
-            }
-            return children_ids;
-        }
-
-        std::vector<id_type> parents_ids() {
-            std::vector<id_type> parents_ids;
-            for (auto &parent : parents) {
-                parents_ids.push_back(parent.lock()->getId());
-            }
-            return parents_ids;
-        }
-
-        ~Node() {
-
-            if (it != graph->nodes.end()) {
-                auto ptr = it->second;
-                for (auto &child : children) {
-                    child->parents.erase(ptr);
-                }
-                graph->nodes.erase(it);
-            }
-        }
-
-        Publication publication;
-
-    private:
-        CitationGraph *graph;
-        typename std::map<id_type, std::weak_ptr<Node>>::iterator
-            it; //iterator musi byc aktualny przed przenoszeniem grafu
-        std::set<std::shared_ptr<Node>, std::owner_less<std::shared_ptr<Node>>> children;
-        std::set<std::weak_ptr<Node>, std::owner_less<std::weak_ptr<Node>>> parents;
-    };
-
+    // ScopeGuard reverts changes in case of exception
     class ScopeGuard {
     public:
         explicit ScopeGuard(std::function<void()> revert)
@@ -232,24 +249,15 @@ private:
         std::function<void()> revert_;
     };
 
+    //Creates ScopeGuards to provide safe container insertion
     template<class Container, class Object>
     ScopeGuard guarded_insert(Container &container, Object &object) {
         auto it = container.insert(object).first;
         return ScopeGuard{[&container, it]() noexcept {
+            // in case of exception, ScopeGuard will clear state of the container
             container.erase(it);
         }};
     }
-
-    std::shared_ptr<Node> get_node(const id_type &id) const {
-        auto nodeIt = nodes.find(id);
-        if (nodeIt == nodes.end()) {
-            throw PublicationNotFound();
-        }
-        return nodeIt->second.lock();
-    }
-
-    std::map<id_type, std::weak_ptr<Node>> nodes;
-    std::shared_ptr<Node> root;
 };
 
 #endif //CITATION_GRAPH_H
