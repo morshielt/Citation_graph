@@ -127,6 +127,11 @@ public:
             for (auto &node : nodes) {
                 node.second.lock()->set_graph(this); //lock() noexcept
             }
+
+            //TODO to przetestowac
+            for (auto &node : other.nodes) {
+                node.second.lock()->set_graph(other); //lock() noexcept
+            }
         }
         return *this;
     }

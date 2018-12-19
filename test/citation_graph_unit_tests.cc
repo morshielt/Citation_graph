@@ -702,9 +702,9 @@ BOOST_AUTO_TEST_SUITE(CitationGraphTests)
     BOOST_AUTO_TEST_CASE(get_id) {
         steps_left_to_throw = inf;
         BOOST_CHECK(
-                (std::is_nothrow_invocable_r<Publication::id_type, decltype(no_except_id_pub_get_id_wrapper)>::value));
+                (std::__nothrow_invokable_r<Publication::id_type, decltype(no_except_id_pub_get_id_wrapper)>::value));
         BOOST_CHECK(
-                (!std::is_nothrow_invocable_r<Publication2::id_type, decltype(except_id_pub_get_id_wrapper)>::value));
+                (!std::__nothrow_invokable_r<Publication2::id_type, decltype(except_id_pub_get_id_wrapper)>::value));
     }
     
     BOOST_AUTO_TEST_CASE(constructor) {

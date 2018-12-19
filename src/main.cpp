@@ -22,9 +22,9 @@ int main() {
 
     CitationGraph<Publication> gen(key1);
     CitationGraph<Publication> gen2(std::move(gen));
-    CitationGraph<Publication> gen3(key1);
+    //CitationGraph<Publication> gen3(key1);
 
-    assert(gen3.get_children(key1).size() == 0);
+/*    assert(gen3.get_children(key1).size() == 0);
     assert(gen3.get_parents(key1).size() == 0);
 
     assert(gen3.exists(key1));
@@ -69,6 +69,6 @@ int main() {
     assert(!gen4.exists("halktt")); //węzeł sam się usunął z mapy przy destrukcji
     assert(!gen4.exists("sierota")); //samo się dziecko usunęło jak straciło wszystkich (1) rodziców
     assert(gen4.exists("troche_sierota")); //węzeł stracił 1 z rodziców(nie wszystkich) i dalej istenieje
-    assert(gen4.get_parents("troche_sierota").size() == 2);
+    assert(gen4.get_parents("troche_sierota").size() == 2);*/
 
 }
