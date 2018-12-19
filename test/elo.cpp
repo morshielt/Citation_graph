@@ -13,14 +13,14 @@ int randomInt(int max) {
 }
 
 class Publication {
- public:
+public:
     typedef typename std::string id_type;
     Publication(id_type const &_id) : id(_id) {
     }
     id_type get_id() const noexcept {
         return id;
     }
- private:
+private:
     id_type id;
 };
 
@@ -69,8 +69,8 @@ private:
 };
 
 bool operator==(
-        const typename PublicationThrowEverything::id_type& lhs,
-        const typename PublicationThrowEverything::id_type&rhs) {
+    const typename PublicationThrowEverything::id_type& lhs,
+    const typename PublicationThrowEverything::id_type&rhs) {
     ThisCanThrow();
     return lhs.p == rhs.p;
 };
@@ -109,7 +109,7 @@ bool equalsVectors(std::vector<PublicationThrowEverything::id_type> &&v1,
 }
 
 int main() {
-/*    {
+    {
         CitationGraph<Publication> to_move("A");
         CitationGraph<Publication> graph(std::move(to_move));
     }
@@ -318,9 +318,8 @@ int main() {
                 assert(gen.exists(PublicationThrowEverything::id_type{1}));
             }
         }
-    }*/
+    }
 
-//TODO #nie_działa
     {
         bool succeeded = false;
         gThrowCounter = 1000;
@@ -347,8 +346,7 @@ int main() {
         }
     }
 
-//TODO #nie_działa
-   /* {
+    {
         bool succeeded = false;
         gThrowCounter = 1000;
         CitationGraph<PublicationThrowEverything> gen({1});
@@ -375,9 +373,9 @@ int main() {
                 assert(equalsVectors(gen.get_parents(PublicationThrowEverything::id_type{3}), {1}));
             }
         }
-    }*/
+    }
 
-    /*{
+    {
         bool succeeded = false;
         gThrowCounter = 1000;
         CitationGraph<PublicationThrowEverything> gen({1});
@@ -401,13 +399,13 @@ int main() {
                 assert(equalsVectors(gen.get_parents(PublicationThrowEverything::id_type{3}), {1}));
             }
         }
-    }*/
+    }
 
-/*    {
+    {
         try {
             CitationGraph<Publication> gen("G");
             gen.create("A", std::vector<Publication::id_type>{});
             assert(false);
         } catch (...) {}
-    }*/
+    }
 }
