@@ -121,16 +121,15 @@ public:
 
     CitationGraph<Publication> &operator=(CitationGraph<Publication> &&other) noexcept {
         if (this != &other) {
-            nodes = std::move(other.nodes);
-            root = std::move(other.root);
+            for (auto &node : nodes) {
+                node.second.lock()->set_graph(&other); //lock() noexcept
+            }
+
+            nodes.swap(other.nodes);
+            root.swap(other.root);
 
             for (auto &node : nodes) {
                 node.second.lock()->set_graph(this); //lock() noexcept
-            }
-
-            //TODO to przetestowac
-            for (auto &node : other.nodes) {
-                node.second.lock()->set_graph(other); //lock() noexcept
             }
         }
         return *this;
