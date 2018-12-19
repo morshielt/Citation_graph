@@ -31,7 +31,6 @@ public:
 
 template<typename Publication>
 class CitationGraph {
-
 public:
     using id_type = typename Publication::id_type;
     
@@ -90,7 +89,7 @@ public:
     void add_citation(id_type const &child_id, id_type const &parent_id) {
         auto parent = get_node(parent_id);
         auto child = get_node(child_id);
-    
+        
         auto guard = guarded_insert(parent->children, child);
         child->parents.insert(parent);
         guard.succeeded();
@@ -111,10 +110,10 @@ public:
         
         std::shared_ptr<Node> newNode = std::make_shared<Node>(id, this);
         std::vector<ScopeGuard> guards;
-    
+        
         for (const id_type &idType: parent_ids) {
             std::shared_ptr<Node> parent = get_node(idType);
-        
+            
             guards.push_back(guarded_insert(parent->children, newNode));
             guards.push_back(guarded_insert(newNode->parents, parent));
         }
@@ -153,7 +152,7 @@ private:
         friend class CitationGraph;
     
     public:
-        Node(const id_type id, CitationGraph *graph) : publication(id), graph(graph) , it(graph->nodes.end()) {}
+        Node(const id_type id, CitationGraph *graph) : publication(id), graph(graph), it(graph->nodes.end()) {}
         
         void setIt(const typename std::map<id_type, std::weak_ptr<Node>>::iterator &it) {
             this->it = it;
@@ -184,13 +183,18 @@ private:
         }
         
         ~Node() {
-            if (it!=graph->nodes.end()) {
+            
+            if (it != graph->nodes.end()) {
+                auto ptr = it->second;
+                for (auto &child : children) {
+                    child->parents.erase(ptr);
+                }
                 graph->nodes.erase(it);
             }
         }
-    
-        Publication publication;
         
+        Publication publication;
+    
     private:
         CitationGraph *graph;
         typename std::map<id_type, std::weak_ptr<Node>>::iterator
