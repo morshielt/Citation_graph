@@ -105,7 +105,7 @@ public:
     CitationGraph<Publication> &operator=(CitationGraph<Publication> &&other) noexcept {
         if (this != &other) {
             root = std::move(other.root);
-            nodes = std::move(other.nodes);
+            nodes.swap(other.nodes);
             
             for (auto &node : nodes) {
                 node.second.lock()->graph = this; //lock() noexcept
