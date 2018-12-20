@@ -37,13 +37,6 @@ private:
     class Node {
         friend class CitationGraph;
 
-    private:
-        CitationGraph *graph;
-        typename std::map<id_type, std::weak_ptr<Node>>::iterator it;
-        std::set<std::shared_ptr<Node>, std::owner_less<std::shared_ptr<Node>>> children;
-        std::set<std::weak_ptr<Node>, std::owner_less<std::weak_ptr<Node>>> parents;
-        Publication publication;
-
     public:
         Node(const id_type id, CitationGraph *graph) : publication(id), graph(graph), it(graph->nodes.end()) {}
 
@@ -55,11 +48,15 @@ private:
             this->graph = graph;
         }
 
+        id_type publication_id() const noexcept(noexcept(std::declval<Publication>().get_id())) {
+            return publication.get_id(); //can throw, doesn't modify graph
+        }
+
         std::vector<id_type> children_ids() {
             std::vector<id_type> children_ids;
             for (auto &child : children) {
                 //can throw, basic guarantee, doesn't modify graph
-                children_ids.push_back(child->publication.get_id());
+                children_ids.push_back(child->publication_id());
             }
             return children_ids;
         }
@@ -68,7 +65,7 @@ private:
             std::vector<id_type> parents_ids;
             for (auto &parent : parents) {
                 //can throw, basic guarantee, doesn't modify graph
-                parents_ids.push_back(parent.lock()->publication.get_id()); //lock() noexcept
+                parents_ids.push_back(parent.lock()->publication_id()); //lock() noexcept
             }
             return parents_ids;
         }
@@ -83,6 +80,14 @@ private:
                 graph->nodes.erase(it); // doesn't throw
             }
         }
+
+        Publication publication;
+
+    private:
+        CitationGraph *graph;
+        typename std::map<id_type, std::weak_ptr<Node>>::iterator it;
+        std::set<std::shared_ptr<Node>, std::owner_less<std::shared_ptr<Node>>> children;
+        std::set<std::weak_ptr<Node>, std::owner_less<std::weak_ptr<Node>>> parents;
     };
 
     std::map<id_type, std::weak_ptr<Node>> nodes;
@@ -103,8 +108,8 @@ public:
         root->set_iterator(insert_it.first);
     }
 
-    CitationGraph(CitationGraph<Publication> &&other) noexcept :
-        nodes(std::move(other.nodes)), root(std::move(other.root)) {
+    CitationGraph(CitationGraph<Publication> &&other) noexcept : nodes(std::move(other.nodes)),
+                                                                 root(std::move(other.root)) {
         for (auto &node : nodes) {
             node.second.lock()->set_graph(this); //lock() noexcept
         }
@@ -131,7 +136,7 @@ public:
     }
 
     id_type get_root_id() const noexcept(noexcept(std::declval<Publication>().get_id())) {
-        return root->publication.get_id();
+        return root->publication_id();
     }
 
     bool exists(id_type const &id) const {
