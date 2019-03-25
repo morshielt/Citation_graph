@@ -2,6 +2,7 @@ citation graph
 ---
 Languages and Tools for Programming I at MIM UW assignment done in pairs.
 Implementation of exception safe DAG of citations using templates.
+
 ---
 Bajtek, po krachu jego cyfrowej waluty, został zmuszony wrócić do kariery
 akademickiej. Ponieważ nie jest zadowolony ze swojej nowej pensji, pisze obecnie
@@ -21,7 +22,7 @@ Należy zaimplementować szablon klasy, która reprezentuje taki graf.
 Klasa `Publication` reprezentuje informacje o publikacji. Jej implementacja
 zostanie dostarczona w stosownym czasie.
 
-#####Klasa `CitationGraph` powinna udostępniać następujący interfejs.
+##### Klasa `CitationGraph` powinna udostępniać następujący interfejs.
 
  Tworzy nowy graf. Tworzy także węzeł publikacji o identyfikatorze `stem_id`.  
 `CitationGraph(Publication::id_type const &stem_id);`
@@ -72,7 +73,7 @@ void create(Publication::id_type const &id, std::vector<Publication::id_type> co
  W wypadku rozspójnienia grafu, zachowujemy tylko spójną składową zawierającą źródło.  
 `void remove(Publication::id_type const &id);`
 
-#####Zakładamy, że:
+##### Zakładamy, że:
 * klasa `Publication` ma konstruktor przyjmujący argument typu
   `Publication::id_type;`
 * klasa `Publication` ma metodę `Publication::id_type get_id() const`, która
@@ -82,7 +83,7 @@ void create(Publication::id_type const &id, std::vector<Publication::id_type> co
 * wartości typu `Publication::id_type` tworzą porządek liniowy i można je
   porównywać za pomocą operatorów ==, !=, <=, >=, <, >.
 
-#####Ponadto:
+##### Ponadto:
 * wszystkie metody klasy `CitationGraph `powinny gwarantować silną odporność
   na wyjątki, a tam, gdzie to jest możliwe i pożądane, powinny być `noexcept`;
 * wszystkie metody powinny być przezroczyste dla wyjątków, czyli powinny
