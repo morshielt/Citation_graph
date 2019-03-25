@@ -1,4 +1,4 @@
-#include "../src/citation_graph.h"
+#include "citation_graph.h"
 
 #include <cassert>
 #include <exception>
@@ -20,7 +20,7 @@ private:
 
 int main() {
   CitationGraph<Publication> gen("Goto Considered Harmful");
-  Publication::id_type const id1 = gen.get_root_id(); // Czy to jest noexcept?
+  Publication::id_type const id1 = gen.get_root_id();
   assert(gen.exists(id1));
   assert(gen.get_parents(id1).size() == 0);
   gen.create("A", id1);
